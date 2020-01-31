@@ -1,0 +1,45 @@
+dist: 
+  - bionic
+language: cpp
+addons:
+  apt:
+    update: true
+    packages:
+    - dh-make
+    - fakeroot
+    - debhelper
+    - autotools-dev
+    - libglib2.0-dev
+    - libcryptsetup-dev
+    - libdevmapper-dev
+    - libpam0g-dev
+    - automake
+    - libtool
+    - autogen
+    - dh-autoreconf
+
+script:
+  - export TRAVIS_TAG=`git rev-parse --short HEAD~1`
+  - dpkg-buildpackage -rfakeroot -b -uc
+
+after_success: |
+  cd ../
+  for deb in `ls *.deb`;
+  do 
+    mv  ${deb} ${TRAVIS_DIST}-${deb}
+    sha256sum ${TRAVIS_DIST}-${deb} > ${TRAVIS_DIST}-${deb}.sha256sum;
+  done
+  cd -
+
+deploy:
+  provider: releases
+  api_key:
+    secure: hPPRfTnfJ4pMGtdU73imnvVX8Sv04aSVqZDXwkffjVXvrUcmWb8H8N1lKCKR3n0Rpg/2nHtoDUi52+VMYep2o9MAXFI7RWnTLsBlo8IuwARIAnoqsLJw3Nlk7iaT7IO0FKH8blC5hpYCdy8iLXSCfJeh0x4DM58FzdjMVj9DQj4xmOS+2HTewlJJShKDNCiqxXjVTXPEFun2YC+NiNs5Q5FznsouxB4Yzl3zMXhTUUV32+XGlNhMcnW838MTAk1aFx9nExX/dPE3mIsc+PxMaf45Vje1HU1LV4peQOn6v8aDkoK75bDttf50VgUQNjOs4mtAwm4kILwy1PZfd8oRXZg5zTD/H2PmN2xBbl06wcMQGeZr3FB+FQl73ktit0yfZ7Rz2hWM/C+hzWB70W/G5xkaNe+/pyatiucP52T/vrYri6lKV2FVe6FYYaHbjDECXkI8XqH+FodcnHHN4V+waU6sm9Rcg4J7vGHeqU0XoHSe0isuqlfytvOm502fTV0GzNtvLwVPMBWCRoIBneLwrIFlpXHJgc+/LNYCDWyiZpbCaV6acicY0aiZ2UrWrkhuVkxnAGAAHgCsYVaCStccQCv8d1idpYdogKK5OhFBB4QT5YRxtdeNLBX9St/yx8fZ1E2fmNxGDrnTGBp2NQ7K2H+xaF4VEj9w6eBX+QyMFy4=
+  file_glob: true
+  file:
+    - ../*.deb
+    - ../*.sha256sum
+  skip_cleanup: true
+  overwrite: true
+  on:
+    repo: aarnaud/pam-cryptsetup
